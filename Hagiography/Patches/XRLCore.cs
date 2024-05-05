@@ -1,11 +1,11 @@
 using HarmonyLib;
 using Newtonsoft.Json;
 using System.Linq;
-using System.Net.Http;
-// using System.Text.Json;
+using System.Threading.Tasks;
 using XRL;
 using XRL.Core;
 using XRL.UI;
+using UnityEngine.Networking;
 
 using Kernelmethod.Hagiography.Schemas;
 
@@ -32,6 +32,10 @@ namespace Kernelmethod.Hagiography {
             "Classic", "Roleplay", "Wander", "Daily"
         };
 
+        public static string BaseRequestUri() {
+            return "http://localhost:8000";
+        }
+
         public static bool UploadEnabled() {
             return The.Game.GetStringGameState("Kernelmethod_Hagiography") == "Enabled"
                 || DEFAULT_ENABLED_GAME_MODES.Contains(The.Game.GetStringGameState("GameMode"));
@@ -44,42 +48,72 @@ namespace Kernelmethod.Hagiography {
         /// Hagiography, if they so choose.
         /// </summary>
         public static void Postfix(bool Real) {
-            if (!Real || !UploadEnabled() || SCORE == null)
-                return;
+            try {
+                if (!Real || !UploadEnabled() || SCORE == null)
+                    return;
 
-            var option = Popup.AskString(
-                $"Would you like to upload your game to Hagiography? Type '{UPLOAD_PROMPT}' to confirm.",
-                MaxLength: UPLOAD_PROMPT.Length,
-                WantsSpecificPrompt: UPLOAD_PROMPT
-            );
+                var option = Popup.AskString(
+                    $"Would you like to upload your game to Hagiography? Type '{UPLOAD_PROMPT}' to confirm.",
+                    MaxLength: UPLOAD_PROMPT.Length,
+                    WantsSpecificPrompt: UPLOAD_PROMPT
+                );
 
-            if (option.IsNullOrEmpty() || option.ToUpper() != UPLOAD_PROMPT)
-                return;
+                if (option.IsNullOrEmpty() || option.ToUpper() != UPLOAD_PROMPT)
+                    return;
 
-            MetricsManager.LogInfo("Uploading save");
-            var render = The.Player.Render;
-            var tile = new Tile {
-                Path = render.Tile,
-                RenderString = render.RenderString,
-                ColorString = render.ColorString,
-                DetailColor = render.DetailColor,
-                TileColor = render.TileColor,
-                HFlip = render.HFlip,
-                VFlip = render.VFlip
-            };
+                MetricsManager.LogInfo("Uploading save");
+                var render = The.Player.Render;
+                var tile = new Tile {
+                    Path = render.Tile,
+                    RenderString = render.RenderString,
+                    ColorString = render.ColorString,
+                    DetailColor = render.DetailColor,
+                    TileColor = render.TileColor,
+                    HFlip = render.HFlip,
+                    VFlip = render.VFlip
+                };
 
-            var gameRecord = new GameRecordCreate {
-                GameMode = The.Game.GetStringGameState("GameMode"),
-                CharacterName = The.Game.PlayerName,
-                Tile = tile.ToString(),
-                Score = SCORE ?? 0,
-                Turns = The.Game.Turns,
-            };
+                var gameRecord = new GameRecordCreate {
+                    GameMode = The.Game.GetStringGameState("GameMode"),
+                    CharacterName = The.Game.PlayerName,
+                    Tile = tile.ToString(),
+                    Score = SCORE ?? 0,
+                    Turns = The.Game.Turns,
+                };
 
-            var json = JsonConvert.SerializeObject(gameRecord);
+                Loading.LoadTask("Uploading game record", delegate {
+                    Task.Run(async delegate {
+                        await UploadGameRecord(gameRecord);
+                    });
+                });
+            }
+            finally {
+                SCORE = null;
+            }
+        }
+
+        public static async Task<int> UploadGameRecord(GameRecordCreate record) {
+            var json = JsonConvert.SerializeObject(record);
             MetricsManager.LogInfo(json);
 
-            SCORE = null;
+            var uri = BaseRequestUri();
+            using (var request = UnityWebRequest.Put($"{uri}/api/records/create", json)) {
+                request.SetRequestHeader("Content-Type", "application/json");
+                request.SetRequestHeader("Authorization", "Bearer test-token");
+                var result = request.SendWebRequest();
+                while (!result.isDone) {
+                    await Task.Delay(50);
+                }
+
+                if (request.result == UnityWebRequest.Result.ConnectionError) {
+                    MetricsManager.LogInfo(request.error);
+                }
+                else {
+                    MetricsManager.LogInfo($"response code: {request.responseCode}");
+                }
+            }
+
+            return 0;
         }
     }
 }
