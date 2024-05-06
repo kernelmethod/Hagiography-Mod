@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<options>
+  <option ID="Kernelmethod_Hagiography_Token" DisplayText="Enter token for Hagiography" Category="Hagiography" Type="Button" SearchKeywords="upload api key" OnClick="Kernelmethod.Hagiography.ApiManager.AskForToken" />
+</options>
