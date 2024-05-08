@@ -36,22 +36,32 @@ namespace Kernelmethod.Hagiography {
         /// to Hagiography.
         /// </summary>
         public static async Task<bool> AskForToken() {
+            var message = "Enter your Hagiography key (do NOT share this key with others!)\n\n"
+                + "To get a key, login to Hagriography in your browser and "
+                + $"go to \n\n{BaseRequestUri()}/profile\n\n"
+                + "In your profile, click 'Generate API key'.\n";
+
+            var originalToken = Token;
+
             while (true) {
-                Token = await Popup.AskStringAsync(
-                    "Enter your Hagiography token\n(Do NOT share this token with others!)",
+                var token = await Popup.AskStringAsync(
+                    message,
                     Default: Token ?? "",
                     MaxLength: 256
                 );
 
-                if (Token.IsNullOrEmpty())
+                if (token.IsNullOrEmpty())
                     break;
 
+                Token = token;
                 if (await CheckToken()) {
                     _Config.Update();
-                    break;
+                    return true;
                 }
             }
 
+            // Failed to verify token. Set back to its original value.
+            Token = originalToken;
             return true;
         }
 
@@ -59,6 +69,14 @@ namespace Kernelmethod.Hagiography {
         /// Check whether the user's API token is valid.
         /// </summary>
         public static async Task<bool> CheckToken() {
+            if (Token.IsNullOrEmpty()) {
+                var message = "You have not configured an API key.\n\n"
+                    + "Go to Options > Hagiography > 'Enter key for Hagiography' "
+                    + "to register an API key.";
+                await Popup.ShowAsync(message);
+                return false;
+            }
+
             var uri = $"{BaseRequestUri()}/api/auth/apikeys/check";
 
             using (var request = UnityWebRequest.Get(uri)) {
@@ -75,7 +93,7 @@ namespace Kernelmethod.Hagiography {
                 }
 
                 LogError(
-                    $"API token validation error: status = {request.responseCode}, content = {request.downloadHandler.text}"
+                    $"API key validation error: status = {request.responseCode}, content = {request.downloadHandler.text}"
                 );
 
                 if (request.result == UnityWebRequest.Result.ConnectionError) {
@@ -85,7 +103,7 @@ namespace Kernelmethod.Hagiography {
                     await Popup.ShowAsync("This account has been disabled.");
                 }
                 else if (request.responseCode == 401) {
-                    await Popup.ShowAsync("Invalid token. Please re-enter your token.");
+                    await Popup.ShowAsync("Invalid key. Please re-enter your key.");
                 }
                 else if (500 <= request.responseCode) {
                     await Popup.ShowAsync("Server error; please try again later.");
