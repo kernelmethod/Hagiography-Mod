@@ -59,49 +59,42 @@ namespace Kernelmethod.Hagiography {
         /// Check whether the user's API token is valid.
         /// </summary>
         public static async Task<bool> CheckToken() {
-            var uri = $"{BaseRequestUri()}/api/auth/apikey/check";
+            var uri = $"{BaseRequestUri()}/api/auth/apikeys/check";
 
             using (var request = UnityWebRequest.Get(uri)) {
-                request.SetRequestHeader("Authorization", $"Bearer {Token}");
+                request.SetRequestHeader("X-Access-Token", Token);
                 var result = request.SendWebRequest();
 
                 while (!result.isDone) {
                     await Task.Delay(50);
                 }
 
+                if (request.responseCode == 200) {
+                    await Popup.ShowAsync("Token verified!");
+                    return true;
+                }
+
+                LogError(
+                    $"API token validation error: status = {request.responseCode}, content = {request.downloadHandler.text}"
+                );
+
                 if (request.result == UnityWebRequest.Result.ConnectionError) {
                     await Popup.ShowAsync("Unable to connect to Hagiography. Please try again.");
-                    return false;
                 }
-
-                if (request.responseCode == 400) {
+                else if (request.responseCode == 400) {
                     await Popup.ShowAsync("This account has been disabled.");
-                    return false;
                 }
-
-                if (request.responseCode == 401) {
+                else if (request.responseCode == 401) {
                     await Popup.ShowAsync("Invalid token. Please re-enter your token.");
-                    return false;
                 }
-
-                if (500 <= request.responseCode) {
-                    LogError(
-                        $"API token validation error: status = {request.responseCode}, content = {request.downloadHandler.text}"
-                    );
+                else if (500 <= request.responseCode) {
                     await Popup.ShowAsync("Server error; please try again later.");
-                    return false;
                 }
-
-                if (request.responseCode != 200) {
-                    LogError(
-                        $"API token validation error: status = {request.responseCode}, content = {request.downloadHandler.text}"
-                    );
+                else {
                     await Popup.ShowAsync("Unknown error; error has been logged to Player.log");
-                    return false;
                 }
 
-                await Popup.ShowAsync("Token verified!");
-                return true;
+                return false;
             }
         }
 
