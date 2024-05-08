@@ -49,7 +49,7 @@ namespace Kernelmethod.Hagiography {
         /// </summary>
         public static void Postfix(bool Real) {
             try {
-                if (!Real || !UploadEnabled() || SCORE == null)
+                if (!Real || !UploadEnabled() || SCORE == null || ApiManager.Token.IsNullOrEmpty())
                     return;
 
                 var option = Popup.AskString(
@@ -99,17 +99,19 @@ namespace Kernelmethod.Hagiography {
             var uri = BaseRequestUri();
             using (var request = UnityWebRequest.Put($"{uri}/api/records/create", json)) {
                 request.SetRequestHeader("Content-Type", "application/json");
-                request.SetRequestHeader("Authorization", "Bearer test-token");
+                request.SetRequestHeader("X-Access-Token", ApiManager.Token);
                 var result = request.SendWebRequest();
                 while (!result.isDone) {
                     await Task.Delay(50);
                 }
 
                 if (request.result == UnityWebRequest.Result.ConnectionError) {
-                    MetricsManager.LogInfo(request.error);
+                    ApiManager.LogError(request.error);
                 }
                 else {
-                    MetricsManager.LogInfo($"response code: {request.responseCode}");
+                    ApiManager.LogError(
+                        $"response code: {request.responseCode}; content = {request.downloadHandler.text}"
+                    );
                 }
             }
 
