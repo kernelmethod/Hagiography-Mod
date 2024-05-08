@@ -52,14 +52,16 @@ namespace Kernelmethod.Hagiography {
                 if (!Real || !UploadEnabled() || SCORE == null || ApiManager.Token.IsNullOrEmpty())
                     return;
 
-                var option = Popup.AskString(
-                    $"Would you like to upload your game to Hagiography? Type '{UPLOAD_PROMPT}' to confirm.",
-                    MaxLength: UPLOAD_PROMPT.Length,
-                    WantsSpecificPrompt: UPLOAD_PROMPT
-                );
+                if (!Options.AutomaticUpload) {
+                    var option = Popup.AskString(
+                        $"Would you like to upload your game to Hagiography? Type '{UPLOAD_PROMPT}' to confirm.",
+                        MaxLength: UPLOAD_PROMPT.Length,
+                        WantsSpecificPrompt: UPLOAD_PROMPT
+                    );
 
-                if (option.IsNullOrEmpty() || option.ToUpper() != UPLOAD_PROMPT)
-                    return;
+                    if (option.IsNullOrEmpty() || option.ToUpper() != UPLOAD_PROMPT)
+                        return;
+                }
 
                 MetricsManager.LogInfo("Uploading save");
                 var render = The.Player.Render;

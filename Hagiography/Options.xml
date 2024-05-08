@@ -2,4 +2,5 @@
 <options>
   <option ID="Kernelmethod_Hagiography_Token" DisplayText="Enter key for Hagiography" Category="Hagiography" Type="Button" SearchKeywords="upload api key" OnClick="Kernelmethod.Hagiography.ApiManager.AskForToken" />
   <option ID="Kernelmethod_Hagiography_CheckToken" DisplayText="Check API key" Category="Hagiography" Type="Button" SearchKeywords="upload api key" OnClick="Kernelmethod.Hagiography.ApiManager.CheckToken" />
+  <option ID="Kernelmethod_Hagiography_AutoUpload" DisplayText="Upload game records to Hagiography automatically" Category="Hagiography" Type="Checkbox" Default="No" />
 </options>
