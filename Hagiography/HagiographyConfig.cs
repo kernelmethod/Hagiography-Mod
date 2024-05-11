@@ -6,12 +6,12 @@ namespace Kernelmethod.Hagiography {
     [JsonObject(MemberSerialization.OptIn)]
     public class HagiographyConfig {
         [JsonProperty("Token")]
-        public string? Token = null;
+        public string Token = null;
 
         public static string ConfigPath() =>
             DataManager.SyncedPath("Kernelmethod_Hagiography.json");
 
-        public static HagiographyConfig? ReadConfig() {
+        public static HagiographyConfig ReadConfig() {
             var path = ConfigPath();
             if (!File.Exists(path))
                 return null;

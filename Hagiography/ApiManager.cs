@@ -10,7 +10,7 @@ namespace Kernelmethod.Hagiography {
         [ModSensitiveStaticCache(true)]
         public static HagiographyConfig _Config = new HagiographyConfig();
 
-        public static string? Token {
+        public static string Token {
             get => _Config.Token;
             set {
                 _Config.Token = value;

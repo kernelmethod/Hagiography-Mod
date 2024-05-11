@@ -6,11 +6,11 @@ namespace Kernelmethod.Hagiography.Schemas {
         public string RenderString;
         public string ColorString;
         public string DetailColor;
-        public string? TileColor = null;
+        public string TileColor = null;
         public bool HFlip = false;
         public bool VFlip = false;
 
-        public string ToString() {
+        public override string ToString() {
             string[] components = {
                 Path,
                 RenderString,

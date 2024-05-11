@@ -147,7 +147,7 @@ namespace Kernelmethod.Hagiography {
                         var uploadResult = JsonConvert.DeserializeObject<GameRecordUploadResult>(request.downloadHandler.text);
                         return uploadResult.RecordId;
                     }
-                    catch (Exception ex) {
+                    catch {
                         ApiManager.LogError("unable to decode server response as JSON");
                     }
                 }
