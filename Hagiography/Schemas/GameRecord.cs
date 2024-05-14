@@ -17,5 +17,8 @@ namespace Kernelmethod.Hagiography.Schemas {
 
         [JsonProperty("turns")]
         public long Turns;
+
+        [JsonProperty("build_code")]
+        public string BuildCode = null;
     }
 }

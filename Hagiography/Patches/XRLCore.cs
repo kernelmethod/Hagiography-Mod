@@ -100,6 +100,7 @@ namespace Kernelmethod.Hagiography {
                     Tile = tile.ToString(),
                     Score = SCORE ?? 0,
                     Turns = The.Game.Turns,
+                    BuildCode = The.Game.GetStringGameState(Constants.BUILD_CODE_STATE),
                 };
 
                 var recordId = await UploadGameRecord(gameRecord);
